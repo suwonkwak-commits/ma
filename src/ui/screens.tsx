@@ -4,6 +4,7 @@ import { REALMS, REGIONS, TECHNIQUES } from '../game/content';
 import { type GameState, getRealmProgress, getStats, getUpgradeCost } from '../game/engine';
 import { colors as C } from './theme';
 import { PixelBar, PixelButton, PixelIcon, PixelPanel, PixelText } from './pixel/primitives';
+import RebirthPanel from './pixel/RebirthPanel';
 
 export type ScreenProps = {
   state: GameState;
@@ -13,6 +14,7 @@ export type ScreenProps = {
   onReturn: () => void;
   onUpgrade: (id: string) => void;
   onEquip: (id: string) => void;
+  onRebirth: () => void;
 };
 
 const fmt = (value: number) => Math.floor(value).toLocaleString('ko-KR');
@@ -32,7 +34,7 @@ function StatCell({ icon, title, value, color = C.text }: { icon: string; title:
   return <View style={s.statCell}><View style={s.statCellTitle}><PixelIcon name={icon} size={14} color={color} /><PixelText size={10} color={C.muted}>{title}</PixelText></View><PixelText size={17} color={color}>{value}</PixelText></View>;
 }
 
-export function TrainingScreen({ state, onTrain, onBreakthrough, onReturn }: ScreenProps) {
+export function TrainingScreen({ state, onTrain, onBreakthrough, onReturn, onRebirth }: ScreenProps) {
   const stats = getStats(state);
   const progress = getRealmProgress(state);
   const maxRealm = state.realm >= REALMS.length - 1;
@@ -51,8 +53,9 @@ export function TrainingScreen({ state, onTrain, onBreakthrough, onReturn }: Scr
         <PixelButton label={state.mode === 'training' ? '집중 수련' : '수련 복귀'} accessibilityLabel={state.mode === 'training' ? '호흡 가다듬기' : '수련으로 돌아오기'} onPress={state.mode === 'training' ? onTrain : onReturn} style={{ flex: 1 }} icon={<PixelIcon name="fire" size={16} color="#e9d580" />} />
         <PixelButton label={maxRealm ? '최고 경지' : '경지 돌파'} accessibilityLabel="경지 돌파" tone="gold" onPress={onBreakthrough} disabled={!canBreakthrough} style={{ flex: 1 }} icon={<PixelIcon name="arrow" size={15} />} />
       </View>
-      <PixelText size={10} color={canBreakthrough ? C.jade : C.muted} style={{ textAlign: 'center' }}>{canBreakthrough ? '내공 충만! 경지를 돌파할 수 있습니다.' : maxRealm ? '화경에 도달했습니다. 강호에 이름을 남기세요.' : `돌파까지 내공 ${fmt(Math.max(0, progress.required - state.cultivation))} 필요 · 집중 수련 +${12 + state.realm * 3}`}</PixelText>
+      <PixelText size={10} color={canBreakthrough ? C.jade : C.muted} style={{ textAlign: 'center' }}>{canBreakthrough ? '내공 충만! 경지를 돌파할 수 있습니다.' : maxRealm ? '자연경에 도달했습니다. 강호에 이름을 남기세요.' : `돌파까지 내공 ${fmt(Math.max(0, progress.required - state.cultivation))} 필요 · 집중 수련 +${12 + state.realm * 3}`}</PixelText>
     </PixelPanel>
+    <RebirthPanel state={state} onRebirth={onRebirth} />
     <PixelPanel title="운용 무공" padding={9}>
       <View style={s.identityRow}><IconBox name={techIcons[TECHNIQUES.indexOf(technique)]} color={C.blue} size={40} /><View style={{ flex: 1 }}><PixelText size={13} color={C.gold}>{technique.name} · 제 {state.techniqueLevels[technique.id]}성</PixelText><PixelText size={10} color={C.muted}>{technique.category} · 운용 공격력 +{state.techniqueLevels[technique.id] * 5}</PixelText></View><View style={s.equippedTag}><PixelText size={10} color={C.jade}>운용 중</PixelText></View></View>
     </PixelPanel>
@@ -76,7 +79,7 @@ export function WorldScreen({ state, onExpedition, onReturn }: ScreenProps) {
       return <PixelPanel key={region.id} padding={9} style={locked ? { opacity: .65 } : undefined}>
         <View style={s.regionHeading}><IconBox name="map" size={42} /><View style={{ flex: 1, gap: 1 }}><PixelText size={14} color={active ? C.jade : C.gold}>0{i + 1}. {region.name}</PixelText><PixelText size={10} color={C.muted}>{region.subtitle}</PixelText></View><View style={[s.realmTag, active && { borderColor: C.green }]}><PixelText size={10} color={active ? C.jade : C.muted}>{realm(region.requiredRealm)} 이상</PixelText></View></View>
         <View style={s.regionInfo}><PixelText size={11} color={C.muted}>{region.enemyName}</PixelText><View style={s.inline}><PixelIcon name="sword" size={12} /><PixelText size={10} color={C.muted}>{region.enemyAttack}</PixelText><PixelIcon name="heart" size={12} color={C.red} /><PixelText size={10} color={C.muted}>{fmt(region.enemyHp)}</PixelText></View></View>
-        <View style={[s.between, { gap: 6 }]}><View style={{ flex: 1 }}><View style={s.inline}><PixelIcon name="coin" size={15} /><PixelText size={11} color={C.gold}>+{fmt(region.rewardSilver)}</PixelText><PixelText size={10} color={C.blue}>내공 +{fmt(region.rewardCultivation)}</PixelText></View></View><PixelButton label={locked ? `${realm(region.requiredRealm)} 개방` : active ? '유람 중' : '출정'} accessibilityLabel={`${region.name} 탐험`} onPress={() => onExpedition(region.id)} disabled={locked || active} small style={{ minWidth: 86 }} /></View>
+        <View style={[s.between, { gap: 6 }]}><View style={{ flex: 1 }}><View style={s.inline}><PixelIcon name="coin" size={15} /><PixelText size={11} color={C.gold}>+{fmt(region.rewardGold)}</PixelText><PixelText size={10} color={C.blue}>내공 +{fmt(region.rewardCultivation)}</PixelText></View></View><PixelButton label={locked ? `${realm(region.requiredRealm)} 개방` : active ? '유람 중' : '출정'} accessibilityLabel={`${region.name} 탐험`} onPress={() => onExpedition(region.id)} disabled={locked || active} small style={{ minWidth: 86 }} /></View>
       </PixelPanel>;
     })}
     <PixelText size={10} color={C.dim} style={s.footnote}>패배하면 안전한 곳으로 복귀해 체력을 회복합니다.</PixelText>
@@ -108,7 +111,7 @@ export function TechniquesScreen({ state, onUpgrade, onEquip }: ScreenProps) {
       const equipped = state.equippedTechnique === technique.id;
       const ownCost = getUpgradeCost(state, technique.id);
       const mastered = ownLevel >= 30;
-      const affordable = state.silver >= ownCost;
+      const affordable = state.gold >= ownCost;
       return <PixelPanel key={technique.id} padding={9} style={equipped ? { borderTopColor: '#a99151', borderLeftColor: '#a99151' } : undefined}>
         <View style={s.techniqueRow}>
           <Pressable accessibilityRole="button" accessibilityLabel={`${technique.name} 상세 정보`} onPress={() => setSelected(technique.id)} style={s.techniqueIcon}><PixelIcon name={techIcons[index]} size={34} color={techColors[index]} /><View style={s.iconGrade}><PixelText size={9} color={C.gold}>{['검', '심', '보', '권'][index]}</PixelText></View></Pressable>
@@ -132,8 +135,8 @@ export function TechniquesScreen({ state, onUpgrade, onEquip }: ScreenProps) {
             ['최대 체력', stats.maxHp, nextStats.maxHp],
             ['수련 / 초', stats.cultivationPerSecond, nextStats.cultivationPerSecond],
           ].map(([label, before, after]) => <View key={String(label)} style={s.between}><PixelText size={11} color={C.muted}>{String(label)}</PixelText><PixelText size={11}>{typeof before === 'number' ? before.toFixed(label === '수련 / 초' ? 2 : 0) : before} <PixelText color={C.dim}>→</PixelText> <PixelText color={Number(after) > Number(before) ? C.jade : C.text}>{typeof after === 'number' ? after.toFixed(label === '수련 / 초' ? 2 : 0) : after}</PixelText></PixelText></View>)}</View></>}
-          <View style={s.inline}><PixelIcon name="coin" size={19} /><PixelText size={14} color={C.gold}>{level >= 30 ? '최고 성취 달성' : `필요 은전 ${fmt(cost)}`}</PixelText></View>
-          <View style={s.actionRow}><PixelButton label={level ? '무공 강화' : '무공 수련'} accessibilityLabel={`${detail.name} 상세 ${level ? '강화' : '수련'}`} onPress={() => onUpgrade(detail.id)} disabled={state.silver < cost || level >= 30} style={{ flex: 1 }} /><PixelButton label={state.equippedTechnique === detail.id ? '운용 중' : '주력 운용'} accessibilityLabel={`${detail.name} 상세 운용`} onPress={() => onEquip(detail.id)} disabled={state.equippedTechnique === detail.id || level === 0} tone="blue" style={{ flex: 1 }} /></View>
+          <View style={s.inline}><PixelIcon name="coin" size={19} /><PixelText size={14} color={C.gold}>{level >= 30 ? '최고 성취 달성' : `필요 금자 ${fmt(cost)}`}</PixelText></View>
+          <View style={s.actionRow}><PixelButton label={level ? '무공 강화' : '무공 수련'} accessibilityLabel={`${detail.name} 상세 ${level ? '강화' : '수련'}`} onPress={() => onUpgrade(detail.id)} disabled={state.gold < cost || level >= 30} style={{ flex: 1 }} /><PixelButton label={state.equippedTechnique === detail.id ? '운용 중' : '주력 운용'} accessibilityLabel={`${detail.name} 상세 운용`} onPress={() => onEquip(detail.id)} disabled={state.equippedTechnique === detail.id || level === 0} tone="blue" style={{ flex: 1 }} /></View>
           <PixelText size={10} color={C.dim}>주력으로 운용하면 무공 1성마다 공격력 +5가 추가됩니다.</PixelText></>}
         </ScrollView>
       </View></View>
@@ -145,18 +148,19 @@ export function JournalScreen({ state }: ScreenProps) {
   const [page, setPage] = useState<'logs' | 'collection'>('logs');
   const milestones = [
     { name: '첫 호흡', detail: '협객의 길을 시작하다', done: true, icon: 'fire' },
-    { name: '문턱을 넘다', detail: '첫 번째 경지 돌파', done: state.realm >= 1, icon: 'arrow' },
-    { name: '강호의 첫 승', detail: '자동 전투 1회 승리', done: state.battleWins >= 1, icon: 'sword' },
-    { name: '벼린 한 수', detail: '무공 하나를 제5성까지 강화', done: Object.values(state.techniqueLevels).some(value => value >= 5), icon: 'book' },
-    { name: '백전의 협객', detail: '자동 전투 100회 승리', done: state.battleWins >= 100, icon: 'helmet' },
+    { name: '문턱을 넘다', detail: '첫 번째 경지 돌파', done: state.highestRealm >= 1, icon: 'arrow' },
+    { name: '강호의 첫 승', detail: '전체 생애 자동 전투 1회 승리', done: state.lifetimeBattleWins >= 1, icon: 'sword' },
+    { name: '벼린 한 수', detail: '이번 생 무공 하나를 제5성까지 강화', done: Object.values(state.techniqueLevels).some(value => value >= 5), icon: 'book' },
+    { name: '백전의 협객', detail: '전체 생애 자동 전투 100회 승리', done: state.lifetimeBattleWins >= 100, icon: 'helmet' },
   ];
   return <View style={s.screen}>
     <PanelHeader title="무림 도감" hint="CHRONICLE" />
     <View style={s.actionRow}><PixelButton label="수행 기록" accessibilityLabel="수행 기록 보기" onPress={() => setPage('logs')} tone={page === 'logs' ? 'gold' : 'blue'} style={{ flex: 1 }} /><PixelButton label="강호 도감" accessibilityLabel="강호 도감 보기" onPress={() => setPage('collection')} tone={page === 'collection' ? 'gold' : 'blue'} style={{ flex: 1 }} /></View>
-    <PixelPanel padding={9}><View style={s.journalStats}><View style={s.journalStat}><PixelText size={18} color={C.gold}>{fmt(state.battleWins)}</PixelText><PixelText size={10} color={C.muted}>승리한 대결</PixelText></View><View style={s.journalStat}><PixelText size={18} color={C.text}>{realm(state.realm)}</PixelText><PixelText size={10} color={C.muted}>지금의 경지</PixelText></View><View style={s.journalStat}><PixelText size={18} color={C.red}>{fmt(state.defeats)}</PixelText><PixelText size={10} color={C.muted}>다시 일어선 날</PixelText></View></View></PixelPanel>
+    <PixelPanel padding={9}><View style={s.journalStats}><View style={s.journalStat}><PixelText size={18} color={C.gold}>{fmt(state.battleWins)}</PixelText><PixelText size={10} color={C.muted}>이번 생 승리</PixelText></View><View style={s.journalStat}><PixelText size={18} color={C.text}>{realm(state.realm)}</PixelText><PixelText size={10} color={C.muted}>지금의 경지</PixelText></View><View style={s.journalStat}><PixelText size={18} color={C.red}>{fmt(state.defeats)}</PixelText><PixelText size={10} color={C.muted}>다시 일어선 날</PixelText></View></View></PixelPanel>
+    <View style={s.between}><PixelText size={10} color={C.muted}>누적 승리 {fmt(state.lifetimeBattleWins)}회 · 환생 {fmt(state.rebirthCount)}회</PixelText><PixelText size={10} color={C.gold}>역대 최고 {realm(state.highestRealm)}</PixelText></View>
     {page === 'logs' ? <PixelPanel title="강호의 기록" padding={0}>{[...state.logs].reverse().map((event, index) => <View key={event.id} style={[s.logRow, index % 2 === 0 && { backgroundColor: '#203645' }]}><PixelIcon name={event.tone === 'good' ? 'star' : event.tone === 'danger' ? 'shield' : 'scroll'} size={17} color={event.tone === 'good' ? C.gold : event.tone === 'danger' ? C.red : C.dim} /><PixelText size={11} color={event.tone === 'good' ? C.gold : event.tone === 'danger' ? C.red : C.muted} style={{ flex: 1 }}>{event.text}</PixelText></View>)}</PixelPanel> : <>
       <PixelPanel title="길 위의 이정표" padding={0}>{milestones.map(item => <View key={item.name} style={[s.milestone, !item.done && { opacity: .6 }]}><IconBox name={item.icon} color={item.done ? C.gold : C.dim} size={34} /><View style={{ flex: 1 }}><PixelText size={12} color={item.done ? C.gold : C.muted}>{item.name}</PixelText><PixelText size={10} color={C.muted}>{item.detail}</PixelText></View>{item.done ? <PixelIcon name="check" size={17} color={C.jade} /> : <PixelText size={10} color={C.dim}>미달성</PixelText>}</View>)}</PixelPanel>
-      <PixelPanel title="강호 견문록"><View style={s.discoveryGrid}>{REGIONS.map((region, index) => <View key={region.id} style={[s.discovery, state.realm < region.requiredRealm && { opacity: .4 }]}><PixelIcon name="map" size={28} /><PixelText size={10} color={state.realm >= region.requiredRealm ? C.gold : C.dim}>0{index + 1}. {region.name}</PixelText><PixelText size={9} color={C.dim}>{state.realm >= region.requiredRealm ? '개방' : `${realm(region.requiredRealm)} 필요`}</PixelText></View>)}</View></PixelPanel>
+      <PixelPanel title="강호 견문록"><View style={s.discoveryGrid}>{REGIONS.map((region, index) => <View key={region.id} style={[s.discovery, state.highestRealm < region.requiredRealm && { opacity: .4 }]}><PixelIcon name="map" size={28} /><PixelText size={10} color={state.highestRealm >= region.requiredRealm ? C.gold : C.dim}>0{index + 1}. {region.name}</PixelText><PixelText size={9} color={C.dim}>{state.highestRealm >= region.requiredRealm ? '견문 보존' : `${realm(region.requiredRealm)} 필요`}</PixelText></View>)}</View></PixelPanel>
     </>}
   </View>;
 }

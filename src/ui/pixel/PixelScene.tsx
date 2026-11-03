@@ -285,7 +285,7 @@ export function PixelScene({ state, height = 256 }: PixelSceneProps) {
     }
     if (state.enemyHp >= old.enemyHp && state.battleWins <= old.battleWins) return;
     const victory = state.battleWins > old.battleWins;
-    setAnnouncement({ text: victory ? `승리!  +${region.rewardSilver}` : `${attack}`, victory });
+    setAnnouncement({ text: victory ? `승리!  +${region.rewardGold}` : `${attack}`, victory });
     strikeAnimation.current?.stop();
     lunge.stopAnimation();
     hit.stopAnimation();
@@ -307,7 +307,7 @@ export function PixelScene({ state, height = 256 }: PixelSceneProps) {
     animations.push(fade);
     strikeAnimation.current = Animated.parallel(animations);
     strikeAnimation.current.start();
-  }, [state.enemyHp, state.battleWins, state.regionId, state.mode, region.rewardSilver, reducedMotion, floatY, hit, lunge, attack]);
+  }, [state.enemyHp, state.battleWins, state.regionId, state.mode, region.rewardGold, reducedMotion, floatY, hit, lunge, attack]);
 
   useEffect(() => () => { strikeAnimation.current?.stop(); idle.stopAnimation(); lunge.stopAnimation(); hit.stopAnimation(); floatY.stopAnimation(); }, [idle, lunge, hit, floatY]);
 

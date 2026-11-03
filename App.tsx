@@ -3,8 +3,8 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StatusBar, StyleSheet,
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { useGame } from './src/hooks/useGame';
-import { breakthrough, claimOfflineRewards, equipTechnique, getRealmProgress, getStats, returnToTraining, startExpedition, train, upgradeTechnique } from './src/game/engine';
-import { REALMS, REGIONS, TECHNIQUES } from './src/game/content';
+import { breakthrough, claimOfflineRewards, equipTechnique, getRealmProgress, getStats, rebirth, returnToTraining, startExpedition, train, upgradeTechnique } from './src/game/engine';
+import { CURRENCIES, REALMS, REGIONS, TECHNIQUES } from './src/game/content';
 import { JournalScreen, TechniquesScreen, TrainingScreen, WorldScreen } from './src/ui/screens';
 import { PixelBar, PixelButton, PixelIcon, PixelPanel, PixelText } from './src/ui/pixel/primitives';
 import PixelScene from './src/ui/pixel/PixelScene';
@@ -47,6 +47,7 @@ function Game() {
     onReturn: () => act(returnToTraining),
     onUpgrade: (id: string) => act(previous => upgradeTechnique(previous, id)),
     onEquip: (id: string) => act(previous => equipTechnique(previous, id)),
+    onRebirth: () => act(previous => rebirth(previous, Date.now())),
   };
 
   return <SafeAreaView style={s.outer} edges={['top', 'bottom']}>
@@ -56,9 +57,9 @@ function Game() {
       <View style={s.header}>
         <View style={s.avatar}><PixelIcon name="person" size={29} /></View>
         <View style={s.playerInfo}><PixelText size={12} numberOfLines={1}>{game.name}</PixelText><PixelText size={10} color={C.cyan}>{REALMS[game.realm].name} · {onJourney ? '강호 유람' : '운기조식'}</PixelText></View>
-        <View style={s.wallet} accessibilityLabel={`은전 ${number(game.silver)}, 내공 ${number(game.cultivation)}`}>
-          <View style={s.walletItem}><PixelIcon name="coin" size={13} /><PixelText size={11} color={C.gold}>{shortNumber(game.silver)}</PixelText></View>
-          <View style={s.walletItem}><PixelIcon name="gem" size={13} /><PixelText size={11} color={C.cyan}>{shortNumber(game.cultivation)}</PixelText></View>
+        <View style={s.wallet} accessibilityLabel={`${CURRENCIES.gold.name} ${number(game.gold)}, ${CURRENCIES.jade.name} ${number(game.jade)}`}>
+          <View style={s.walletItem}><PixelIcon name="coin" size={13} /><PixelText size={11} color={C.gold}>{shortNumber(game.gold)}</PixelText></View>
+          <View style={s.walletItem}><PixelIcon name="jade" size={13} /><PixelText size={11} color="#a9ead6">{shortNumber(game.jade)}</PixelText></View>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="게임 안내" onPress={() => setDialog('guide')} style={s.headerButton}><PixelText size={19} color={C.gold}>?</PixelText></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="설정" onPress={() => setDialog('settings')} style={s.headerButton}><PixelIcon name="gear" size={19} /></Pressable>
@@ -138,8 +139,9 @@ function Game() {
               <PixelText style={s.bodyText}>수련으로 내공을 쌓고 경지를 넘으세요. AUTO를 켜면 현재 지역에서 자동 전투를 시작합니다.</PixelText>
               {[
                 ['01', '수련하고 돌파하기', '캐릭터에서 호흡을 가다듬으면 내공이 증가합니다. 내공이 충만해지면 경지를 돌파하세요.'],
-                ['02', '강호에서 실력 겨루기', '강호에서 지역을 선택하세요. 2초마다 자동으로 공격하며, 승리하면 은전과 내공을 얻습니다.'],
+                ['02', '강호에서 실력 겨루기', '강호에서 지역을 선택하세요. 2초마다 자동으로 공격하며, 승리하면 금자와 내공을 얻습니다.'],
                 ['03', '무공을 익혀 강해지기', '무공을 수련하고 강화하면 능력치가 오릅니다. 익힌 무공은 아래 슬롯으로 빠르게 운용할 수 있습니다.'],
+                ['04', '화경부터 새로운 생으로', '화경에 도달하면 환생할 수 있습니다. 이번 생에서 획득한 내공·금자·공적을 천옥으로 환산합니다. 사용한 내공과 금자도 누적 획득량에 포함됩니다.'],
               ].map(([n, title, body]) => <PixelPanel key={n} padding={12}><PixelText color={C.gold}>{n}  {title}</PixelText><PixelText style={s.bodyText}>{body}</PixelText></PixelPanel>)}
               <PixelText size={11} color={C.muted}>자리를 비우면 최대 8시간 동안 내공을 수련합니다. 재접속하면 안전하게 수련으로 복귀합니다.</PixelText>
               <PixelButton label="강호에 첫발 내딛기" tone="green" onPress={() => setDialog(null)} />
@@ -148,12 +150,12 @@ function Game() {
               <PixelPanel title="기기 자동 저장"><PixelText style={s.bodyText}>진행 상황은 이 기기에 3초마다, 행동할 때마다 저장됩니다. 현재 다른 기기와의 동기화는 지원하지 않습니다.</PixelText></PixelPanel>
               <PixelButton label="게임 안내 다시 보기" tone="blue" onPress={() => setDialog('guide')} />
               <PixelButton label="모든 수련 기록 초기화" tone="danger" onPress={() => setDialog('reset')} />
-              <PixelText style={s.bodyText}>앱을 삭제하거나 브라우저 데이터를 지우면 기록이 사라질 수 있습니다. 현재 결제와 광고는 없습니다.</PixelText>
+              <PixelText style={s.bodyText}>천옥은 현재 환생 보상으로 획득합니다. 현금 결제와 광고는 연결하지 않았습니다. 앱을 삭제하거나 브라우저 데이터를 지우면 기록이 사라질 수 있습니다.</PixelText>
               <PixelPanel title="만드는 이야기"><PixelText size={12} color={C.gold}>무림여록 · 도트 에디션</PixelText><PixelText style={s.bodyText}>폰트: Neo둥근모 v1.601{ '\n' }© 2017–2021 Eunbin Jeong (Dalgona.){ '\n' }SIL Open Font License 1.1</PixelText></PixelPanel>
             </>}
             {dialog === 'reset' && <>
               <PixelText size={17} color={C.gold}>새로운 길을 걸을까요?</PixelText>
-              <PixelText style={s.bodyText}>경지, 은전, 무공, 전투 기록이 모두 초기화됩니다. 초기화한 기록은 복구할 수 없습니다.</PixelText>
+              <PixelText style={s.bodyText}>경지, 금자, 천옥, 무공, 환생 횟수와 전투 기록까지 모두 초기화됩니다. 일반 환생과 달리 보존되는 기록이 없으며, 초기화한 기록은 복구할 수 없습니다.</PixelText>
               <PixelButton label="기록을 지우고 다시 시작" tone="danger" onPress={() => { reset(); changeTab('training'); setDialog(null); }} />
               <PixelButton label="기록 유지하기" tone="blue" onPress={() => setDialog('settings')} />
             </>}

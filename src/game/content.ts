@@ -16,17 +16,29 @@ export type Region = {
   enemyName: string;
   enemyHp: number;
   enemyAttack: number;
-  rewardSilver: number;
+  rewardGold: number;
   rewardCultivation: number;
 };
 
-export const REALMS = [
+export const CURRENCIES = {
+  gold: { name: '금자' },
+  jade: { name: '천옥' },
+} as const;
+
+export const REBIRTH_REALM = 5;
+
+export type Realm = { name: string; threshold: number; hanja?: string };
+
+export const REALMS: readonly Realm[] = [
   { name: '삼류', threshold: 0 },
   { name: '이류', threshold: 120 },
   { name: '일류', threshold: 480 },
   { name: '절정', threshold: 1_600 },
   { name: '초절정', threshold: 5_000 },
-  { name: '화경', threshold: 15_000 },
+  { name: '화경', hanja: '化境', threshold: 15_000 },
+  { name: '현경', hanja: '玄境', threshold: 45_000 },
+  { name: '생사경', hanja: '生死境', threshold: 150_000 },
+  { name: '자연경', hanja: '自然境', threshold: 500_000 },
 ] as const;
 
 export const TECHNIQUES: readonly Technique[] = [
@@ -70,7 +82,7 @@ export const REGIONS: readonly Region[] = [
     enemyName: '길목의 산적',
     enemyHp: 56,
     enemyAttack: 11,
-    rewardSilver: 24,
+    rewardGold: 24,
     rewardCultivation: 20,
   },
   {
@@ -82,7 +94,7 @@ export const REGIONS: readonly Region[] = [
     enemyName: '나루의 수적',
     enemyHp: 135,
     enemyAttack: 22,
-    rewardSilver: 65,
+    rewardGold: 65,
     rewardCultivation: 54,
   },
   {
@@ -94,7 +106,7 @@ export const REGIONS: readonly Region[] = [
     enemyName: '적운의 낭인',
     enemyHp: 280,
     enemyAttack: 35,
-    rewardSilver: 150,
+    rewardGold: 150,
     rewardCultivation: 135,
   },
   {
@@ -106,7 +118,7 @@ export const REGIONS: readonly Region[] = [
     enemyName: '월하의 은거 고수',
     enemyHp: 560,
     enemyAttack: 54,
-    rewardSilver: 340,
+    rewardGold: 340,
     rewardCultivation: 310,
   },
 ];

@@ -3,6 +3,7 @@ import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { advanceGame, createInitialState, hydrateGameState, type GameState } from '../game/engine';
 
+// Keep the original key so v1 silver balances migrate to the v2 gold/jade save.
 const SAVE_KEY = '@murim-chronicles/game-v1';
 export type SaveStatus = 'loading' | 'saved' | 'error';
 
