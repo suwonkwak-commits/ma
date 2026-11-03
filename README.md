@@ -1,0 +1,71 @@
+# 무림여록
+
+Android·iOS 출시를 목표로 시작한 한국어 무협 방치형 RPG입니다. Expo / React Native / TypeScript를 사용하며, 같은 게임을 웹에서도 플레이하고 검증할 수 있습니다.
+
+## 현재 플레이할 수 있는 것
+
+- 자동 내공 수련과 직접 호흡 수련, 6단계 경지와 돌파
+- 4종 무공의 습득·강화·주력 무공 운용
+- 경지에 따라 열리는 4개 지역과 2초 간격 자동 전투
+- 승리 보상, 패배 후 수련 복귀와 체력 회복
+- 기기 자동 저장, 재접속 복원, 최대 8시간 오프라인 내공 수련
+- 실제 플레이에 따른 여록과 이정표, 게임 안내·확인 후 초기화
+- 이미지 파일 없이 SVG로 구성한 산수·달·인장과 모바일/데스크톱 화면
+
+현재는 로컬 플레이 개발 버전입니다. 광고·결제·회원가입·서버 동기화는 아직 연결하지 않았습니다. 저장 기록 읽기에 실패하면 기존 진행을 덮어쓰지 않고 다시 불러오도록 안내합니다. 기기 저장 자체를 삭제하면 복구할 수 없습니다.
+
+## 개발 실행
+
+Node.js 24.3 이상(24 LTS 권장), npm을 사용합니다. 버전은 `package.json`, 의존성은 `package-lock.json`에 고정되어 있습니다.
+
+```bash
+cd /workspace/ma
+npm ci --no-audit --no-fund
+EXPO_OFFLINE=1 npm run web -- --host localhost --port 8081
+```
+
+`EXPO_OFFLINE=1`은 Expo CLI의 계정·원격 호환성 조회를 생략합니다. 이 환경에서는 해당 API가 허용되지 않아 SDK에 포함된 공식 호환 버전 목록을 사용합니다. 패키지 설치와 TLS·무결성 검증을 비활성화하지 않습니다.
+
+로컬 개발 머신에서 모바일을 확인하려면 `npm start` 후 현재 SDK를 지원하는 Expo Go 또는 개발 빌드를 사용합니다. 휴대전화가 개발 서버에 접근할 수 있는 네트워크가 필요합니다. 네이티브 프로젝트를 직접 빌드하는 `npm run android`는 Android SDK/JDK가, `npm run ios`는 macOS/Xcode가 필요합니다. 이 클라우드에서 실기기 실행을 완료한 것은 아닙니다.
+
+각 클라우드 작업은 이미 격리되어 있으므로 기존 `/workspace/ma` 체크아웃을 사용합니다. 사용자가 요청하지 않으면 별도 Git worktree를 만들지 않습니다.
+
+## 검증
+
+```bash
+npm run typecheck
+npm test
+EXPO_OFFLINE=1 npm run build:web
+# 최초 한 번: npx playwright install chromium
+npm run test:e2e
+
+# Android/iOS의 JavaScript 및 Hermes 번들 생성
+EXPO_OFFLINE=1 npm run build:native-bundles
+```
+
+시스템 Chromium이 설치된 이 환경에서는 브라우저 다운로드 대신 다음 명령을 사용합니다.
+
+```bash
+PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
+```
+
+브라우저 테스트는 `dist`를 직접 서빙하여 실제 화면 조작, 저장/복원, 자동 전투, 오프라인 보상, 읽기 실패 시 기존 기록 보호를 모바일·데스크톱 두 크기에서 확인합니다. 타입 검사나 네이티브 번들 생성은 서명된 APK/AAB/IPA 설치 검증을 대체하지 않습니다.
+
+## 구조
+
+| 경로 | 역할 |
+| --- | --- |
+| `App.tsx` | 앱 내비게이션, 안내·설정·오프라인 보상 화면 |
+| `src/ui/` | 수련·강호·무공·여록 화면과 시각 테마 |
+| `src/game/content.ts` | 경지·무공·지역·보상·해금 조건 |
+| `src/game/engine.ts` | UI와 분리한 시간 경과·성장·전투·저장 복원 규칙 |
+| `src/hooks/useGame.ts` | 자동 저장, 앱 생명주기, 저장 오류 재시도 |
+| `tests/game.spec.ts` | 실제 브라우저 플레이 테스트 |
+
+## 스토어 출시까지
+
+`app.json`의 `com.example.murimchronicles`는 개발용 예시 식별자입니다. 실제 조직의 고유 식별자, 앱 아이콘, 서명 계정으로 교체한 뒤 네이티브 빌드를 구성해야 합니다. `eas.json`에는 내부 테스트용 APK, iOS 시뮬레이터, 프로덕션 AAB/iOS 빌드 프로필의 출발점이 들어 있습니다. EAS 프로젝트 연결과 Apple/Google 개발자 계정 설정은 아직 수행하지 않았습니다.
+
+다음 단계는 실기기 알파 테스트와 첫 30분 성장 밸런스, 문파·목표 콘텐츠입니다. 그다음 복구 가능한 계정·서버 검증과 함께 선택형 보상 광고·외형·편의 상품을 검토합니다. 수익화와 출시 단계의 세부 기준은 [제품 계획](docs/PRODUCT.md)에 있습니다.
+
+사용자가 제공한 문서는 현재 네트워크 정책에 막혀 원문을 읽지 못했습니다. 실제 접근 결과와 반영 범위는 [참고 기록](docs/REFERENCES.md)에 명시했습니다.

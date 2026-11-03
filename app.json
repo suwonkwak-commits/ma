@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "무림여록",
+    "slug": "murim-chronicles",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#071411",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.murimchronicles"
+    },
+    "android": {
+      "package": "com.example.murimchronicles",
+      "permissions": []
+    },
+    "web": {
+      "name": "무림여록 — 나만의 강호",
+      "shortName": "무림여록",
+      "description": "수련으로 경지를 넘고, 한 걸음씩 강호에 이름을 새기는 무협 방치형 RPG.",
+      "themeColor": "#071411",
+      "backgroundColor": "#071411",
+      "bundler": "metro",
+      "output": "single"
+    }
+  }
+}

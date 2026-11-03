@@ -1,0 +1,17 @@
+node_modules/
+.expo/
+dist/
+dist-native/
+dist-pages/
+artifacts/
+web-build/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+android/
+ios/
+.DS_Store
+playwright-report/
+test-results/
