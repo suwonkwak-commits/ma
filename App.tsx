@@ -8,6 +8,7 @@ import { CURRENCIES, REALMS, REGIONS, TECHNIQUES } from './src/game/content';
 import { JournalScreen, TechniquesScreen, TrainingScreen, WorldScreen } from './src/ui/screens';
 import { PixelBar, PixelButton, PixelIcon, PixelPanel, PixelText } from './src/ui/pixel/primitives';
 import PixelScene from './src/ui/pixel/PixelScene';
+import StoryBook from './src/ui/pixel/StoryBook';
 
 const C = { bg: '#101b25', gold: '#e0c271', muted: '#94adb9', green: '#62d393', cyan: '#7ccee3' };
 const tabs = [
@@ -17,7 +18,7 @@ const tabs = [
   { id: 'journal', label: '도감', accessible: '여록', icon: 'book' },
 ] as const;
 type Tab = (typeof tabs)[number]['id'];
-type Dialog = 'guide' | 'settings' | 'reset' | null;
+type Dialog = 'guide' | 'settings' | 'reset' | 'story' | null;
 const number = (value: number) => Math.floor(value).toLocaleString('ko-KR');
 const shortNumber = (value: number) => value >= 10000 ? `${(value / 10000).toFixed(1)}만` : number(value);
 
@@ -48,6 +49,7 @@ function Game() {
     onUpgrade: (id: string) => act(previous => upgradeTechnique(previous, id)),
     onEquip: (id: string) => act(previous => equipTechnique(previous, id)),
     onRebirth: () => act(previous => rebirth(previous, Date.now())),
+    onReadStory: () => setDialog('story'),
   };
 
   return <SafeAreaView style={s.outer} edges={['top', 'bottom']}>
@@ -129,7 +131,8 @@ function Game() {
         </View>
       </>}
 
-      <Modal visible={dialog !== null} transparent animationType="none" onRequestClose={() => setDialog(null)}>
+      <StoryBook visible={dialog === 'story'} onClose={() => setDialog(null)} />
+      <Modal visible={dialog !== null && dialog !== 'story'} transparent animationType="none" onRequestClose={() => setDialog(null)}>
         <View style={s.modalBackdrop}><View style={s.dialog} accessibilityViewIsModal>
           <View style={s.dialogHeading}><View style={s.headingCorner} /><PixelText size={16} color="#1c2630">{dialog === 'guide' ? '강호 입문서' : dialog === 'reset' ? '기록 초기화' : '메뉴 · 설정'}</PixelText><View style={s.headingCorner} /></View>
           <Pressable accessibilityRole="button" accessibilityLabel="닫기" onPress={() => setDialog(null)} style={s.closeButton}><PixelText size={18} color="#f3d1b2">×</PixelText></Pressable>
@@ -149,6 +152,7 @@ function Game() {
             {dialog === 'settings' && <>
               <PixelPanel title="기기 자동 저장"><PixelText style={s.bodyText}>진행 상황은 이 기기에 3초마다, 행동할 때마다 저장됩니다. 현재 다른 기기와의 동기화는 지원하지 않습니다.</PixelText></PixelPanel>
               <PixelButton label="게임 안내 다시 보기" tone="blue" onPress={() => setDialog('guide')} />
+              <PixelButton label="강호의 서사 읽기" accessibilityLabel="강호의 서사 읽기" tone="gold" onPress={() => setDialog('story')} icon={<PixelIcon name="book" size={18} />} />
               <PixelButton label="모든 수련 기록 초기화" tone="danger" onPress={() => setDialog('reset')} />
               <PixelText style={s.bodyText}>천옥은 현재 환생 보상으로 획득합니다. 현금 결제와 광고는 연결하지 않았습니다. 앱을 삭제하거나 브라우저 데이터를 지우면 기록이 사라질 수 있습니다.</PixelText>
               <PixelPanel title="만드는 이야기"><PixelText size={12} color={C.gold}>무림여록 · 도트 에디션</PixelText><PixelText style={s.bodyText}>폰트: Neo둥근모 v1.601{ '\n' }© 2017–2021 Eunbin Jeong (Dalgona.){ '\n' }SIL Open Font License 1.1</PixelText></PixelPanel>

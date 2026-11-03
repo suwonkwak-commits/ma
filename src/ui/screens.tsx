@@ -15,6 +15,7 @@ export type ScreenProps = {
   onUpgrade: (id: string) => void;
   onEquip: (id: string) => void;
   onRebirth: () => void;
+  onReadStory?: () => void;
 };
 
 const fmt = (value: number) => Math.floor(value).toLocaleString('ko-KR');
@@ -34,16 +35,16 @@ function StatCell({ icon, title, value, color = C.text }: { icon: string; title:
   return <View style={s.statCell}><View style={s.statCellTitle}><PixelIcon name={icon} size={14} color={color} /><PixelText size={10} color={C.muted}>{title}</PixelText></View><PixelText size={17} color={color}>{value}</PixelText></View>;
 }
 
-export function TrainingScreen({ state, onTrain, onBreakthrough, onReturn, onRebirth }: ScreenProps) {
+export function TrainingScreen({ state, onTrain, onBreakthrough, onReturn, onRebirth, onReadStory }: ScreenProps) {
   const stats = getStats(state);
   const progress = getRealmProgress(state);
   const maxRealm = state.realm >= REALMS.length - 1;
   const canBreakthrough = !maxRealm && progress.current >= progress.required;
   const technique = TECHNIQUES.find(item => item.id === state.equippedTechnique)!;
   return <View style={s.screen}>
-    <PanelHeader title="협객 성장" hint="CHARACTER" />
+    <View style={s.panelHeader}><PixelText size={14} color={C.gold}>협객 성장</PixelText>{onReadStory ? <Pressable accessibilityRole="button" accessibilityLabel="서막 읽기" onPress={onReadStory} style={s.storyLink}><PixelIcon name="scroll" size={16} /><PixelText size={11} color={C.gold}>서막 읽기</PixelText></Pressable> : <PixelText size={10} color={C.dim}>CHARACTER</PixelText>}</View>
     <PixelPanel padding={10}>
-      <View style={s.identityRow}><IconBox name="person" color="#6eb9d6" size={50} /><View style={{ flex: 1, gap: 2 }}><PixelText size={15}>{state.name}</PixelText><PixelText size={11} color={C.gold}>{realm(state.realm)} · 강호의 초행자</PixelText></View><View style={{ alignItems: 'flex-end' }}><PixelText size={10} color={C.muted}>전투력</PixelText><PixelText size={20} color={C.jade}>{fmt(stats.power)}</PixelText></View></View>
+      <View style={s.identityRow}><IconBox name="person" color="#6eb9d6" size={50} /><View style={{ flex: 1, gap: 2 }}><PixelText size={15}>{state.name}</PixelText><PixelText size={11} color={C.gold}>{realm(state.realm)} · 잊힌 십대고수</PixelText></View><View style={{ alignItems: 'flex-end' }}><PixelText size={10} color={C.muted}>전투력</PixelText><PixelText size={20} color={C.jade}>{fmt(stats.power)}</PixelText></View></View>
       <View style={s.statsGrid}><StatCell icon="sword" title="공격력" value={fmt(stats.attack)} color={C.gold} /><StatCell icon="shield" title="방어력" value={fmt(stats.defense)} /><StatCell icon="heart" title="최대 체력" value={fmt(stats.maxHp)} color={C.red} /><StatCell icon="fire" title="수련 / 초" value={`+${stats.cultivationPerSecond.toFixed(1)}`} color={C.blue} /></View>
     </PixelPanel>
     <PixelPanel title="내공 수련" right={<PixelText size={10} color={state.mode === 'training' ? C.jade : C.gold}>{state.mode === 'training' ? '자동 수련 중' : '강호 탐험 중'}</PixelText>}>
@@ -144,7 +145,7 @@ export function TechniquesScreen({ state, onUpgrade, onEquip }: ScreenProps) {
   </View>;
 }
 
-export function JournalScreen({ state }: ScreenProps) {
+export function JournalScreen({ state, onReadStory }: ScreenProps) {
   const [page, setPage] = useState<'logs' | 'collection'>('logs');
   const milestones = [
     { name: '첫 호흡', detail: '협객의 길을 시작하다', done: true, icon: 'fire' },
@@ -155,6 +156,7 @@ export function JournalScreen({ state }: ScreenProps) {
   ];
   return <View style={s.screen}>
     <PanelHeader title="무림 도감" hint="CHRONICLE" />
+    {onReadStory && <PixelButton label="강호의 서사 읽기" accessibilityLabel="도감에서 이야기 읽기" tone="blue" onPress={onReadStory} icon={<PixelIcon name="book" size={18} />} />}
     <View style={s.actionRow}><PixelButton label="수행 기록" accessibilityLabel="수행 기록 보기" onPress={() => setPage('logs')} tone={page === 'logs' ? 'gold' : 'blue'} style={{ flex: 1 }} /><PixelButton label="강호 도감" accessibilityLabel="강호 도감 보기" onPress={() => setPage('collection')} tone={page === 'collection' ? 'gold' : 'blue'} style={{ flex: 1 }} /></View>
     <PixelPanel padding={9}><View style={s.journalStats}><View style={s.journalStat}><PixelText size={18} color={C.gold}>{fmt(state.battleWins)}</PixelText><PixelText size={10} color={C.muted}>이번 생 승리</PixelText></View><View style={s.journalStat}><PixelText size={18} color={C.text}>{realm(state.realm)}</PixelText><PixelText size={10} color={C.muted}>지금의 경지</PixelText></View><View style={s.journalStat}><PixelText size={18} color={C.red}>{fmt(state.defeats)}</PixelText><PixelText size={10} color={C.muted}>다시 일어선 날</PixelText></View></View></PixelPanel>
     <View style={s.between}><PixelText size={10} color={C.muted}>누적 승리 {fmt(state.lifetimeBattleWins)}회 · 환생 {fmt(state.rebirthCount)}회</PixelText><PixelText size={10} color={C.gold}>역대 최고 {realm(state.highestRealm)}</PixelText></View>
@@ -168,6 +170,7 @@ export function JournalScreen({ state }: ScreenProps) {
 const s = StyleSheet.create({
   screen: { gap: 7 },
   panelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 3, minHeight: 25, gap: 8 },
+  storyLink: { minHeight: 44, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 5 },
   iconBox: { borderWidth: 2, borderTopColor: '#0b1722', borderLeftColor: '#0b1722', borderBottomColor: '#587485', borderRightColor: '#587485', backgroundColor: '#152430', alignItems: 'center', justifyContent: 'center' },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   statsGrid: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#405968', paddingTop: 8, gap: 4 },

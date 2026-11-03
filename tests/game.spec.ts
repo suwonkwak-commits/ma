@@ -276,3 +276,52 @@ test('rebirth converts earned resources once and preserves premium jade and life
   expect((await readSave(page)).jade).toBe(58);
   expect((await readSave(page)).rebirthCount).toBe(2);
 });
+
+test('the prologue opens from the character screen, pages correctly and restarts when reopened', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '서막 읽기', exact: true }).click();
+  const reader = page.getByTestId('story-reader');
+  await expect(reader).toBeVisible();
+  await expect(reader.getByLabel('서막 1쪽, 전체 5쪽', { exact: true })).toBeVisible();
+  await expect(reader.getByRole('button', { name: '이전 이야기', exact: true })).toBeDisabled();
+  await page.screenshot({ path: `test-results/${test.info().project.name}-story-prologue.png`, fullPage: true });
+  for (let i = 0; i < 4; i++) await reader.getByRole('button', { name: '다음 이야기', exact: true }).click();
+  await expect(reader.getByLabel('서막 5쪽, 전체 5쪽', { exact: true })).toBeVisible();
+  await reader.getByRole('button', { name: '이전 이야기', exact: true }).click();
+  await expect(reader.getByLabel('서막 4쪽, 전체 5쪽', { exact: true })).toBeVisible();
+  await reader.getByRole('button', { name: '다음 이야기', exact: true }).click();
+  await reader.getByRole('button', { name: '강호로 돌아가기', exact: true }).click();
+  await expect(reader).not.toBeVisible();
+  await page.getByRole('button', { name: '서막 읽기', exact: true }).click();
+  await expect(reader.getByLabel('서막 1쪽, 전체 5쪽', { exact: true })).toBeVisible();
+  await reader.getByRole('button', { name: '이야기 닫기', exact: true }).click();
+  await expect(reader).not.toBeVisible();
+});
+
+test('campaign plans are readable from the menu without granting factions or changing saved wealth', async ({ page }) => {
+  await seedSave(page, { ...createInitialState(Date.now()), gold: 777, jade: 11, totalJadeEarned: 11, realm: 5, highestRealm: 5 });
+  await page.goto('/');
+  await page.getByRole('button', { name: '설정', exact: true }).click();
+  await page.getByRole('button', { name: '강호의 서사 읽기', exact: true }).click();
+  const reader = page.getByTestId('story-reader');
+  await expect(reader).toBeVisible();
+  await reader.getByRole('button', { name: '이야기 문파', exact: true }).click();
+  await expect(reader.getByText(/문파 영입·파견은 추가 예정입니다/)).toBeVisible();
+  await expect(reader.getByText('01. 모용세가', { exact: true })).toBeVisible();
+  await reader.getByText('07. 무당파', { exact: true }).scrollIntoViewIfNeeded();
+  await expect(reader.getByText('07. 무당파', { exact: true })).toBeVisible();
+  await reader.getByText(/16\. 마교/).scrollIntoViewIfNeeded();
+  await expect(reader.getByText(/16\. 마교/)).toBeVisible();
+  await page.screenshot({ path: `test-results/${test.info().project.name}-story-campaign.png`, fullPage: true });
+  await reader.getByRole('button', { name: '이야기 세계관', exact: true }).click();
+  await expect(reader.getByText('빼앗긴 강호의 질서', { exact: true })).toBeVisible();
+  await reader.getByRole('button', { name: '이야기 환생', exact: true }).click();
+  await expect(reader.getByText('실제 환생 조건과 현재 보상은 캐릭터의 환생 메뉴에서 확인할 수 있습니다.', { exact: true })).toBeVisible();
+  await reader.getByRole('button', { name: '강호로 돌아가기', exact: true }).click();
+  await expect(reader).not.toBeVisible();
+  await expect.poll(async () => (await readSave(page))?.gold).toBe(777);
+  const after = await readSave(page);
+  expect(after.jade).toBe(11);
+  expect(after.realm).toBe(5);
+  expect(after.rebirthCount).toBe(0);
+});
