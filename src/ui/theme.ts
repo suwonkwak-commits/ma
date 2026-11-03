@@ -1,17 +1,20 @@
-import { Platform } from 'react-native';
-
 export const colors = {
-  background: '#071411',
-  card: '#0d211c',
-  cardRaised: '#122b23',
-  border: '#244037',
-  gold: '#d4b77b',
-  goldFaint: '#827451',
-  text: '#ede8da',
-  muted: '#8ba69b',
-  dim: '#577568',
-  jade: '#82baa2',
-  red: '#c77c6b',
+  background: '#101b25',
+  card: '#1c2f3d',
+  cardRaised: '#294757',
+  border: '#587181',
+  borderLight: '#78919b',
+  borderDark: '#0b141c',
+  gold: '#e5c66b',
+  goldFaint: '#9c874f',
+  text: '#eef1e7',
+  muted: '#b3c4cd',
+  dim: '#738d9e',
+  jade: '#61d58b',
+  green: '#43ab70',
+  red: '#ed8f7d',
+  blue: '#63c4e2',
 };
 
-export const serif = Platform.select({ web: 'Georgia, "Times New Roman", serif', ios: 'Georgia', default: 'serif' });
+export const serif = 'PixelKR';
+export const pixelFont = 'PixelKR';

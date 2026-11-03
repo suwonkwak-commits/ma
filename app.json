@@ -3,6 +3,7 @@
     "name": "무림여록",
     "slug": "murim-chronicles",
     "version": "0.1.0",
+    "plugins": ["expo-font"],
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#071411",

@@ -137,3 +137,44 @@ test('a storage read failure never overwrites existing progress and can be retri
   expect((await readSave(page)).silver).toBe(777);
   expect((await readSave(page)).realm).toBe(2);
 });
+
+test('bundled pixel font and persistent battlefield work while AUTO changes real game state', async ({ page }) => {
+  await page.goto('/');
+  const stage = page.getByTestId('battle-stage');
+  await expect(stage).toBeVisible();
+  expect(await page.evaluate(() => Array.from(document.fonts).some(face =>
+    face.family.replace(/["']/g, '') === 'PixelKR' && face.status === 'loaded'
+  ) && document.fonts.check('12px PixelKR', '무림여록'))).toBe(true);
+  await page.getByRole('button', { name: '자동 전투 시작', exact: true }).click();
+  await expect.poll(async () => (await readSave(page))?.mode).toBe('expedition');
+  for (const tab of ['강호', '무공', '여록', '수련']) {
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    await expect(stage).toBeVisible();
+    await expect(page.getByRole('button', { name: '자동 전투 중지', exact: true })).toBeVisible();
+  }
+  await page.screenshot({ path: `test-results/${test.info().project.name}-pixel-auto.png`, fullPage: true });
+  await page.getByRole('button', { name: '자동 전투 중지', exact: true }).click();
+  await expect.poll(async () => (await readSave(page))?.mode).toBe('training');
+  await expect(page.getByRole('button', { name: '자동 전투 시작', exact: true })).toBeVisible();
+});
+
+test('pixel technique detail previews real growth and its upgrade persists', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: '무공', exact: true }).click();
+  await page.getByRole('button', { name: '청무검법 상세 정보', exact: true }).click();
+  await expect(page.getByText('다음 성장 · 2성', { exact: true })).toBeVisible();
+  await expect(page.getByText('31', { exact: true })).toBeVisible();
+  await page.screenshot({ path: `test-results/${test.info().project.name}-pixel-technique-detail.png`, fullPage: true });
+  await page.getByRole('button', { name: '청무검법 상세 강화', exact: true }).click();
+  await expect.poll(async () => (await readSave(page))?.techniqueLevels?.['fog-sword']).toBe(2);
+  expect((await readSave(page)).silver).toBe(26);
+  await expect(page.getByText('다음 성장 · 3성', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '무공 상세 닫기', exact: true }).click();
+  await expect(page.getByText('2성', { exact: true }).first()).toBeVisible();
+  await page.screenshot({ path: `test-results/${test.info().project.name}-pixel-techniques.png`, fullPage: true });
+  await page.reload();
+  await page.getByRole('tab', { name: '무공', exact: true }).click();
+  await page.getByRole('button', { name: '청무검법 상세 정보', exact: true }).click();
+  await expect(page.getByText('제 2성', { exact: false })).toBeVisible();
+  expect((await readSave(page)).silver).toBe(26);
+});
